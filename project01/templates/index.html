@@ -48,6 +48,12 @@
         .posting-box > .custom-file {
             margin-bottom: 20px;
         }
+
+        .save-date {
+            color: gray;
+            font-size: 14px;
+            margin-bottom: 0;
+        }
     </style>
     <script>
         $(document).ready(function () {
@@ -65,6 +71,7 @@
                     let title = diaries[i]['title']
                     let content = diaries[i]['content']
                     let file = diaries[i]['file']
+                    let date = diaries[i]['date']
                     // console.log(title, content)
 
                     let temp_html = `<div class="card">
@@ -72,6 +79,7 @@
                                         <div class="card-body">
                                             <h5 class="card-title">${title}</h5>
                                             <p class="card-text">${content}</p>
+                                            <p class="save-date">${date}</p>
                                         </div>
                                     </div>`
 
