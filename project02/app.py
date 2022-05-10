@@ -17,7 +17,11 @@ def main ():
 @app.route('/detail/<keyword>')
 def detail (keyword):
     # API에서 단어 뜻 찾아서 결과 보내기
-    return render_template("detail.html", word=keyword)
+    r = requests.get(f"https://owlbot.info/api/v4/dictionary/{keyword}",
+                     headers={"Authorization": "Token 90d718d3a7a7c9456365d5dd1e867f530812fb92"})
+    result = r.json()
+    print(result)
+    return render_template("detail.html", word=keyword, result=result)
 
 
 @app.route('/api/save_word', methods=['POST'])
