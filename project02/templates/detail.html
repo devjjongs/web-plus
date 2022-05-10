@@ -75,52 +75,32 @@
         div >
     </style>
     <script>
-        {#let word = '{{ word }}'
-        $(document).ready(function () {
-            // get_definitions()
-        })#}
-
-        {#function get_definitions() {
+        function save_word() {
             $.ajax({
-                type: "GET",
-                url: `https://owlbot.info/api/v4/dictionary/${word}`,
-                beforeSend: function (xhr) {
-                    xhr.setRequestHeader("Authorization", "Token 90d718d3a7a7c9456365d5dd1e867f530812fb92");
-                },
-                data: {},
-                error: function (xhr, status, error) {
-                    alert("에러 발생!");
+                type: "POST",
+                url: `/api/save_word`,
+                data: {
+                    word_give: "{{ word }}",
+                    definition_give: "{{ result.definitions[0].definition }}"
                 },
                 success: function (response) {
-                    console.log(response)
-                    $("#word").text(response["word"])
-                    if (response["pronunciation"] == null) {
-                        $("#pronunciation").text("");
-                    } else {
-                        $("#pronunciation").text(`/${response["pronunciation"]}/`)
-                    }
-                    let definitions = response["definitions"]
-                    $("#definitions").empty();
-                    for (let i = 0; i < definitions.length; i++) {
-                        let definition = definitions[i]
-                        let temp_html = ``
-                        if (definition["example"] == null) {
-                            temp_html = `<div style="padding:10px">
-                                            <i>${definition["type"]}</i>
-                                            <br>${definition["definition"]}<br>
-                                        </div>`
-                        } else {
-                            temp_html = `<div style="padding:10px">
-                                            <i>${definition["type"]}</i>
-                                            <br>${definition["definition"]}<br>
-                                            <span class="example">${definition["example"]}</span>
-                                        </div>`
-                        }
-                        $("#definitions").append(temp_html)
-                    }
+                    alert(response["msg"])
+                    window.location.href = "/detail/{{ word }}?status_give=old"
                 }
-            })
-        }#}
+            });
+        }
+
+        function delete_word() {
+            $.ajax({
+                type: "POST",
+                url: `/api/delete_word`,
+                data: {word_give: "{{ word }}"},
+                success: function (response) {
+                    alert(response["msg"])
+                    window.location.href = "/"
+                }
+            });
+        }
     </script>
 </head>
 <body>
@@ -135,11 +115,15 @@
                         <h5 id="pronunciation" style="display: inline;">/{{ result.pronunciation }}/</h5>
                     {% endif %}
                 </div>
-                <button id="btn-save" class="btn btn-outline-sparta btn-lg"><i class="fa fa-floppy-o"
-                                                                               aria-hidden="true"></i>
-                </button>
-                <button id="btn-delete" class="btn btn-sparta btn-lg"><i class="fa fa-trash-o" aria-hidden="true"></i>
-                </button>
+                {% if status=="new" %}
+                    <button onclick="save_word()" id="btn-save" class="btn btn-outline-sparta btn-lg">
+                        <i class="fa fa-floppy-o" aria-hidden="true"></i>
+                    </button>
+                {% else %}
+                    <button onclick="delete_word()" id="btn-delete" class="btn btn-sparta btn-lg">
+                        <i class="fa fa-trash-o" aria-hidden="true"></i>
+                    </button>
+                {% endif %}
             </div>
             <hr>
             <div id="definitions">
@@ -148,7 +132,7 @@
                         <i>{{ definition.type }}</i>
                         <br>{{ definition.definition.encode('ascii','ignore').decode('utf-8') }}<br>
                         {% if definition.example != None %}
-                        {#{% if definition.example %}#}
+                            {#{% if definition.example %}#}
                             <span class="example">{{ definition.example.encode('ascii','ignore').decode('utf-8')|safe }}</span>
                         {% endif %}
                     </div>
