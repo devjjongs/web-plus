@@ -115,6 +115,17 @@ def posting ():
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
         # 포스팅하기
+        user_info = db.users.find_one({"username": payload["id"]})
+        comment_receive = request.form["comment_give"]
+        date_receive = request.form["date_give"]
+        doc = {
+            "username": user_info["username"],
+            "profile_name": user_info["profile_name"],
+            "profile_pic_real": user_info["profile_pic_real"],
+            "comment": comment_receive,
+            "date": date_receive
+        }
+        db.posts.insert_one(doc)
         return jsonify({"result": "success", 'msg': '포스팅 성공'})
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("home"))
@@ -126,7 +137,10 @@ def get_posts ():
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
         # 포스팅 목록 받아오기
-        return jsonify({"result": "success", "msg": "포스팅을 가져왔습니다."})
+        posts = list(db.posts.find({}).sort("date", -1).limit(20))  # 포스트 전체 목록증 최근순으로 20개만 가져오는 코드
+        for post in posts:
+            post["_id"] = str(post["_id"])  # 포스트 작성한 id를 문자열로 바꿔준다.
+        return jsonify({"result": "success", "msg": "포스팅을 가져왔습니다.", "posts":posts})
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("home"))
 
