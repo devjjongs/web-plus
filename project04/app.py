@@ -104,6 +104,22 @@ def save_img ():
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
         # 프로필 업데이트
+        username = payload["id"]
+        name_receive = request.form["name_give"]
+        about_receive = request.form["about_give"]
+        new_doc = {
+            "profile_name": name_receive,
+            "profile_info": about_receive
+        }
+        if 'file_give' in request.files:
+            file = request.files["file_give"]
+            filename = secure_filename(file.filename)
+            extension = filename.split(".")[-1]
+            file_path = f"profile_pics/{username}.{extension}"
+            file.save("./static/" + file_path)
+            new_doc["profile_pic"] = filename
+            new_doc["profile_pic_real"] = file_path
+        db.users.update_one({'username': payload['id']}, {'$set': new_doc})
         return jsonify({"result": "success", 'msg': '프로필을 업데이트했습니다.'})
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("home"))
@@ -136,17 +152,22 @@ def get_posts ():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
-        # 포스팅 목록 받아오기
-        # 포스트 전체 목록증 최근순으로 20개만 가져오는 코드
-        posts = list(db.posts.find({}).sort("date", -1).limit(20))
+        # username을 받아 해당 사용자의 글만 가져오도록 하는 코드
+        username_receive = request.args.get("username_give")
+        if username_receive == "":
+            posts = list(db.posts.find({}).sort("date", -1).limit(20))
+        else:
+            posts = list(db.posts.find({"username": username_receive}).sort("date", -1).limit(20))
+        # # 포스팅 목록 받아오기
+        # # 포스트 전체 목록증 최근순으로 20개만 가져오는 코드
+        # posts = list(db.posts.find({}).sort("date", -1).limit(20))
         for post in posts:
             # 포스트 작성한 id를 문자열로 바꿔준다.
             post["_id"] = str(post["_id"])
             post["count_heart"] = db.likes.count_documents(
-                {"post_id": post["_id"], "type": "heart"})  # 해당 글의 좋아요 숫자를 카운트
-            post["heart_by_me"] = bool(
-                db.likes.find_one(
-                    {"post_id": post["_id"], "type": "heart", "username": payload['id']}))  # 내가 좋아요를 눌렀는지 확인
+                {"post_id": post["_id"], "type": "heart"})  # 해당 글의 하트 숫자를 카운트
+            post["heart_by_me"] = bool(db.likes.find_one(
+                {"post_id": post["_id"], "type": "heart", "username": payload['id']}))  # 내가 하트를 눌렀는지 확인
         return jsonify({"result": "success", "msg": "포스팅을 가져왔습니다.", "posts": posts})
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("home"))
