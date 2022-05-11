@@ -168,6 +168,17 @@ def get_posts ():
                 {"post_id": post["_id"], "type": "heart"})  # 해당 글의 하트 숫자를 카운트
             post["heart_by_me"] = bool(db.likes.find_one(
                 {"post_id": post["_id"], "type": "heart", "username": payload['id']}))  # 내가 하트를 눌렀는지 확인
+
+            post["count_like"] = db.likes.count_documents(
+                {"post_id": post["_id"], "type": "like"})  # 해당 글의 좋아요 숫자를 카운트
+            post["like_by_me"] = bool(db.likes.find_one(
+                {"post_id": post["_id"], "type": "like", "username": payload['id']}))  # 내가 좋아요를 눌렀는지 확인
+
+            post["count_star"] = db.likes.count_documents(
+                {"post_id": post["_id"], "type": "star"})  # 해당 글의 별 숫자를 카운트
+            post["star_by_me"] = bool(db.likes.find_one(
+                {"post_id": post["_id"], "type": "star", "username": payload['id']}))  # 내가 별을 눌렀는지 확인
+
         return jsonify({"result": "success", "msg": "포스팅을 가져왔습니다.", "posts": posts})
     except (jwt.ExpiredSignatureError, jwt.exceptions.DecodeError):
         return redirect(url_for("home"))

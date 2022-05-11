@@ -1,9 +1,13 @@
 /*좋아요 업데이트 함수 클라이언트*/
 function toggle_like(post_id, type) {
     console.log(post_id, type)
-    let $a_like = $(`#${post_id} a[aria-label='heart']`)
+    let $a_like = $(`#${post_id} a[aria-label='${type}']`)
     let $i_like = $a_like.find("i")
-    if ($i_like.hasClass("fa-heart")) {
+
+    let full_icons = {"heart": "fa-heart", "like": "fa-thumbs-up", "star": "fa-star"};
+    let empty_icons = {"heart": "fa-heart-o", "like": "fa-thumbs-o-up", "star": "fa-star-o"};
+
+    if ($i_like.hasClass(full_icons[type])) {
         $.ajax({
             type: "POST",
             url: "/update_like",
@@ -14,7 +18,7 @@ function toggle_like(post_id, type) {
             },
             success: function (response) {
                 console.log("unlike")
-                $i_like.addClass("fa-heart-o").removeClass("fa-heart")
+                $i_like.addClass(empty_icons[type]).removeClass(full_icons[type])
                 $a_like.find("span.like-num").text(num2str(response["count"]))
             }
         })
@@ -29,7 +33,7 @@ function toggle_like(post_id, type) {
             },
             success: function (response) {
                 console.log("like")
-                $i_like.addClass("fa-heart").removeClass("fa-heart-o")
+                $i_like.addClass(full_icons[type]).removeClass(empty_icons[type])
                 $a_like.find("span.like-num").text(num2str(response["count"]))
             }
         })
@@ -116,8 +120,22 @@ function get_posts(username) {
                     /*변수 = 조건 ? 참일 때 값 : 거짓일 때 값*/
                     let class_heart = post['heart_by_me'] ? "fa-heart" : "fa-heart-o"
 
-                    /*좋아요 개수*/
+                    /*하트 개수*/
                     let count_heart = post['count_heart']
+
+                    /*보여지는 좋아요 종류 결정 삼항 연산자*/
+                    /*변수 = 조건 ? 참일 때 값 : 거짓일 때 값*/
+                    let class_like = post['like_by_me'] ? "fa-thumbs-up" : "fa-thumbs-o-up"
+
+                    /*좋아요 개수*/
+                    let count_like = post['count_like']
+
+                    /*보여지는 별 종류 결정 삼항 연산자*/
+                    /*변수 = 조건 ? 참일 때 값 : 거짓일 때 값*/
+                    let class_star = post['star_by_me'] ? "fa-star" : "fa-star-o"
+
+                    /*별 개수*/
+                    let count_star = post['count_star']
 
                     let html_temp = `<div class="box" id="${post["_id"]}">
                                         <article class="media">
@@ -142,6 +160,16 @@ function get_posts(username) {
                                                             &nbsp;
                                                             <span class="like-num">${num2str(count_heart)}</span>
                                                         </a>
+                                                        <a class="level-item is-sparta" aria-label="like" onclick="toggle_like('${post['_id']}', 'like')">
+                                                            <span class="icon is-small"><i class="fa ${class_like}" aria-hidden="true"></i></span>
+                                                            &nbsp;
+                                                            <span class="like-num">${num2str(count_like)}</span>
+                                                        </a>
+                                                        <a class="level-item is-sparta" aria-label="star" onclick="toggle_like('${post['_id']}', 'star')">
+                                                            <span class="icon is-small"><i class="fa ${class_star}" aria-hidden="true"></i></span>
+                                                            &nbsp;
+                                                            <span class="like-num">${num2str(count_star)}</span>
+                                                        </a>
                                                     </div>
                                                 </nav>
                                             </div>
@@ -154,10 +182,3 @@ function get_posts(username) {
         }
     })
 }
-
-
-/*get_posts 실행하기*/
-// $(document).ready(function () {
-//     get_posts()
-// })
-
