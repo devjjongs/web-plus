@@ -6,7 +6,6 @@ from flask import Flask, render_template, jsonify, request, redirect, url_for
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 
-
 app = Flask(__name__)
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.config['UPLOAD_FOLDER'] = "./static/profile_pics"
@@ -18,7 +17,7 @@ db = client.dbsparta_plus_week4
 
 
 @app.route('/')
-def home():
+def home ():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
@@ -31,13 +30,13 @@ def home():
 
 
 @app.route('/login')
-def login():
+def login ():
     msg = request.args.get("msg")
     return render_template('login.html', msg=msg)
 
 
 @app.route('/user/<username>')
-def user(username):
+def user (username):
     # 각 사용자의 프로필과 글을 모아볼 수 있는 공간
     token_receive = request.cookies.get('mytoken')
     try:
@@ -51,7 +50,7 @@ def user(username):
 
 
 @app.route('/sign_in', methods=['POST'])
-def sign_in():
+def sign_in ():
     # 로그인
     return jsonify({'result': 'success'})
 
@@ -63,17 +62,28 @@ def sign_up():
     password_receive = request.form['password_give']
     password_hash = hashlib.sha256(password_receive.encode('utf-8')).hexdigest()
     # DB에 저장
+    doc = {
+        "username": username_receive,                               # 아이디
+        "password": password_hash,                                  # 비밀번호
+        "profile_name": username_receive,                           # 프로필 이름 기본값은 아이디
+        "profile_pic": "",                                          # 프로필 사진 파일 이름
+        "profile_pic_real": "profile_pics/profile_placeholder.png", # 프로필 사진 기본 이미지
+        "profile_info": ""                                          # 프로필 한 마디
+    }
+    db.users.insert_one(doc)
     return jsonify({'result': 'success'})
 
 
 @app.route('/sign_up/check_dup', methods=['POST'])
-def check_dup():
+def check_dup ():
     # ID 중복확인
-    return jsonify({'result': 'success'})
+    username_receive = request.form['username_give']
+    exists = bool(db.users.find_one({"username": username_receive}))
+    return jsonify({'result': 'success', 'exists': exists})
 
 
 @app.route('/update_profile', methods=['POST'])
-def save_img():
+def save_img ():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
@@ -84,7 +94,7 @@ def save_img():
 
 
 @app.route('/posting', methods=['POST'])
-def posting():
+def posting ():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
@@ -95,7 +105,7 @@ def posting():
 
 
 @app.route("/get_posts", methods=['GET'])
-def get_posts():
+def get_posts ():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
@@ -106,7 +116,7 @@ def get_posts():
 
 
 @app.route('/update_like', methods=['POST'])
-def update_like():
+def update_like ():
     token_receive = request.cookies.get('mytoken')
     try:
         payload = jwt.decode(token_receive, SECRET_KEY, algorithms=['HS256'])
